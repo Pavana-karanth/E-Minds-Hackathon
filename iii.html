@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkSync</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0A0F1C;
+            color: white;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .hero {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(to bottom, #0A0F1C, black);
+        }
+
+        h1, p {
+            margin: 0.5rem 0;
+        }
+
+        .btn {
+            background: #238636;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+            margin: 0.5rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2ea043;
+        }
+
+        #audioPlayer, #generatedAudio {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        #status {
+            margin: 1rem 0;
+        }
+
+        .textbox {
+            width: 60%;
+            height: 60px;
+            padding: 8px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #1e1e1e;
+            color: white;
+            margin: 1rem 0;
+            resize: none;
+        }
+
+        .textbox:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        .label {
+            font-size: 1rem;
+            color: #58a6ff;
+        }
+
+        #loading {
+            color: #58a6ff;
+            display: none;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>TalkSync</h1>
+        <p>Speak or type your message below:</p>
+
+        <!-- Input Text Box -->
+        <label class="label" for="inputBox">Input Text</label>
+        <textarea id="inputBox" class="textbox" placeholder="Speak or type here..."></textarea>
+
+        <div class="recorder">
+            <button class="btn" onclick="startRecording()">Start Recording</button>
+            <button class="btn" onclick="stopRecording()">Stop Recording</button>
+        </div>
+
+        <audio id="audioPlayer" controls></audio>
+        <audio id="generatedAudio" controls></audio>
+
+        <div id="status"></div>
+        <div id="loading">Processing...</div> <!-- Loading text -->
+    </div>
+
+    <script>
+        let mediaRecorder, recognition;
+        let audioChunks = [];
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('inputBox').value = transcript;
+            };
+
+            recognition.onstart = function() {
+                document.getElementById('status').innerText = 'Listening...';
+            };
+
+            recognition.onend = function() {
+                document.getElementById('status').innerText = 'Recording Stopped';
+            };
+        } else {
+            alert("Speech Recognition is not supported in this browser.");
+        }
+
+        async function startRecording() {
+            recognition.start();
+            document.getElementById('status').innerText = 'Recording...';
+
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.start();
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = document.getElementById('audioPlayer');
+                audio.src = audioUrl;
+                audio.style.display = 'block';
+
+                await uploadAudio(audioBlob);
+            };
+        }
+
+        function stopRecording() {
+            recognition.stop();
+            mediaRecorder.stop();
+        }
+
+        async function uploadAudio(blob) {
+            const formData = new FormData();
+            formData.append("file", blob, "audio.wav");
+
+            document.getElementById('loading').style.display = 'block'; // Show loading text
+
+            try {
+                const response = await fetch("https://0095-35-185-207-105.ngrok-free.app/process-speech/", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const audioResponse = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioResponse);
+                    const generatedAudio = document.getElementById("generatedAudio");
+
+                    generatedAudio.src = audioUrl;
+                    generatedAudio.style.display = 'block';
+                    generatedAudio.play();
+
+                    document.getElementById('loading').style.display = 'none'; // Hide loading text
+                } else {
+                    console.error("Error:", response.statusText);
+                    alert("Failed to upload audio!");
+                    document.getElementById('loading').style.display = 'none'; // Hide loading text
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                alert("An error occurred while uploading the audio.");
+                document.getElementById('loading').style.display = 'none'; // Hide loading text
+            }
+        }
+
+        async function sendText() {
+            const text = document.getElementById("inputBox").value.trim();
+            if (!text) {
+                alert("Please enter some text.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("text", text);
+
+            document.getElementById('loading').style.display = 'block'; // Show loading text
+
+            try {
+                const response = await fetch("https://0884-34-83-108-75.ngrok-free.app/process-text/", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const audioResponse = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioResponse);
+                    const generatedAudio = document.getElementById("generatedAudio");
+
+                    generatedAudio.src = audioUrl;
+                    generatedAudio.style.display = 'block';
+                    generatedAudio.play();
+
+                    document.getElementById('loading').style.display = 'none'; // Hide loading text
+                } else {
+                    console.error("Error:", response.statusText);
+                    alert("Failed to send text!");
+                    document.getElementById('loading').style.display = 'none'; // Hide loading text
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                alert("An error occurred while sending the text.");
+                document.getElementById('loading').style.display = 'none'; // Hide loading text
+            }
+        }
+    </script>
+</body>
+</html>

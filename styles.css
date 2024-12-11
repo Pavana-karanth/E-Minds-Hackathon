@@ -1,0 +1,121 @@
+/* General Reset */
+body, h1, h2, h3, p, a {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    color: #fff;
+}
+body {
+    background: #0d1117;
+    line-height: 1.6;
+}
+a {
+    text-decoration: none;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #1f1f20;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+header .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+header nav a {
+    margin: 0 1rem;
+    color: #58a6ff;
+    font-weight: bold;
+}
+
+/* Hero Section */
+.hero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0;
+    height: 90vh;
+    flex-direction: column;
+}
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    color: #58a6ff;
+    }
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+.hero .btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    background: #274d82;
+    border-radius: 50px;
+    color: #fff;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+.hero .btn:hover {
+    background: #2ea043;
+}
+.buttonn{
+    background: #274d82;
+    border-radius: 50px;
+}
+
+.buttonn:hover {
+    background: #2ea043;
+}
+
+/* Features Section */
+.features {
+    padding: 3rem 2rem;
+    background: #1b3253;
+    text-align: center;
+    height: 60vh;
+}
+.features h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    font-size: large;
+}
+.feature {
+    background: #21262d;
+    padding: 1.5rem;
+    border-radius: 8px;
+    transition: transform 0.3s, background 0.3s;
+}
+.feature:hover {
+    transform: translateY(-10px);
+    background: #30363d;
+}
+.feature .icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    display: block;
+    color: #58a6ff;
+}
+.feature h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 1rem;
+    background: #0d1117;
+    font-size: 0.9rem;
+}
